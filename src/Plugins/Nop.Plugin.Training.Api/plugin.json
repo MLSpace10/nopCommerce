@@ -1,0 +1,11 @@
+{
+  "Group": "Training",
+  "FriendlyName": "Commerce Engineering Lab API",
+  "SystemName": "Training.Api",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "5.00" ],
+  "Author": "Commerce Engineering Lab contributors",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Training.Api.dll",
+  "Description": "Authenticated local training API backed by nopCommerce application services."
+}

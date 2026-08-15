@@ -1,3 +1,4 @@
 .env
 runtime/App_Data/appsettings.json
-
+runtime/App_Data/plugins*.json
+spec/.generated/

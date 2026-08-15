@@ -30,6 +30,10 @@ function Import-TrainingEnvironment {
     if ($database -ne 'CommerceEngineeringLab') {
         throw "Refusing to target database '$database'; training scripts are restricted to CommerceEngineeringLab."
     }
+
+    if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable('TRAINING_API_KEY'))) {
+        throw 'TRAINING_API_KEY is required.'
+    }
 }
 
 function Get-ComposeArguments {

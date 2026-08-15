@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "operations": [
+    { "method": "get", "path": "/api/health", "successStatus": "200" },
+    { "method": "get", "path": "/api/openapi.yaml", "successStatus": "200" },
+    { "method": "get", "path": "/api/customers", "successStatus": "200" },
+    { "method": "get", "path": "/api/customers/{customerId}", "successStatus": "200" },
+    { "method": "get", "path": "/api/products", "successStatus": "200" },
+    { "method": "get", "path": "/api/products/{productId}", "successStatus": "200" },
+    { "method": "get", "path": "/api/inventory/{productId}", "successStatus": "200" },
+    { "method": "post", "path": "/api/orders", "successStatus": "201" },
+    { "method": "get", "path": "/api/orders/{orderId}", "successStatus": "200" },
+    { "method": "post", "path": "/api/orders/{orderId}/cancel", "successStatus": "200" },
+    { "method": "post", "path": "/api/payments", "successStatus": "200" },
+    { "method": "get", "path": "/api/internal/outbox", "successStatus": "200" },
+    { "method": "post", "path": "/api/internal/training/faults/{profile}", "successStatus": "200" }
+  ],
+  "requiredSchemaProperties": {
+    "CustomerResponse": ["id", "email", "active", "createdOnUtc"],
+    "ProductResponse": ["id", "name", "sku", "price", "published"],
+    "InventoryResponse": ["productId", "manageInventoryMethod", "stockQuantity"],
+    "OrderResponse": ["id", "orderGuid", "customerId", "orderStatus", "paymentStatus", "total", "currencyCode", "createdOnUtc"],
+    "OutboxMessageResponse": ["id", "messageType", "payload", "state", "attemptCount", "createdUtc"]
+  }
+}

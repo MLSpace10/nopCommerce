@@ -1,0 +1,925 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Commerce Engineering Lab API",
+    "version": "1.0.0",
+    "description": "Local training API backed by nopCommerce application services and the CommerceEngineeringLab database.",
+    "license": {
+      "name": "nopCommerce Public License 4.0",
+      "url": "https://www.nopcommerce.com/license"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local Docker Compose environment"
+    }
+  ],
+  "security": [
+    {
+      "TrainingApiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Runtime health and contract discovery."
+    },
+    {
+      "name": "Customers",
+      "description": "Synthetic nopCommerce customer reads."
+    },
+    {
+      "name": "Products",
+      "description": "nopCommerce catalog reads."
+    },
+    {
+      "name": "Inventory",
+      "description": "Product inventory reads through the catalog service."
+    },
+    {
+      "name": "Orders",
+      "description": "Synthetic order creation, reads, and cancellation."
+    },
+    {
+      "name": "Payments",
+      "description": "Training payment state transitions."
+    },
+    {
+      "name": "Internal",
+      "description": "Local-only outbox and fault-control operations."
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "getTrainingApiHealth",
+        "tags": [
+          "Health"
+        ],
+        "summary": "Check training API health",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "503": {
+            "description": "Training API is unavailable"
+          }
+        }
+      }
+    },
+    "/api/openapi.yaml": {
+      "get": {
+        "operationId": "getTrainingOpenApi",
+        "tags": [
+          "Health"
+        ],
+        "summary": "Download the runtime OpenAPI source",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OpenAPI source of truth embedded in the running plugin",
+            "content": {
+              "application/yaml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "operationId": "listCustomers",
+        "tags": [
+          "Customers"
+        ],
+        "summary": "List customers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageIndex"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/customers/{customerId}": {
+      "get": {
+        "operationId": "getCustomerById",
+        "tags": [
+          "Customers"
+        ],
+        "summary": "Get one customer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CustomerId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "operationId": "listProducts",
+        "tags": [
+          "Products"
+        ],
+        "summary": "List products",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageIndex"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/products/{productId}": {
+      "get": {
+        "operationId": "getProductById",
+        "tags": [
+          "Products"
+        ],
+        "summary": "Get one product",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProductId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/inventory/{productId}": {
+      "get": {
+        "operationId": "getProductInventory",
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Get inventory for one product",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProductId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product inventory",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "post": {
+        "operationId": "createOrder",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Create a minimal synthetic order using nopCommerce services",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created",
+            "headers": {
+              "Location": {
+                "description": "URL of the created order",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}": {
+      "get": {
+        "operationId": "getOrderById",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Get one order",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrderId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/orders/{orderId}/cancel": {
+      "post": {
+        "operationId": "cancelOrder",
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Cancel an order through the nopCommerce order processing service",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrderId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/payments": {
+      "post": {
+        "operationId": "recordPayment",
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Mark a training order paid through the nopCommerce order processing service",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/api/internal/outbox": {
+      "get": {
+        "operationId": "listTrainingOutbox",
+        "tags": [
+          "Internal"
+        ],
+        "summary": "List synthetic training outbox messages",
+        "responses": {
+          "200": {
+            "description": "Outbox messages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutboxMessageResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/internal/training/faults/{profile}": {
+      "post": {
+        "operationId": "setTrainingFaultProfile",
+        "tags": [
+          "Internal"
+        ],
+        "summary": "Select the in-memory training fault profile",
+        "description": "This route returns 404 unless the application environment is Development.",
+        "parameters": [
+          {
+            "name": "profile",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "none",
+                "database-transient",
+                "http-timeout",
+                "connection-reset"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fault profile selected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaultProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "TrainingApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Training-Api-Key",
+        "description": "Development-only key loaded from the ignored training/.env file."
+      }
+    },
+    "parameters": {
+      "PageIndex": {
+        "name": "pageIndex",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "PageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "CustomerId": {
+        "name": "customerId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "ProductId": {
+        "name": "productId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "OrderId": {
+        "name": "orderId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Request validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Missing or invalid training API key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found"
+      },
+      "Conflict": {
+        "description": "Resource state does not permit the operation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Referenced resource is missing or incomplete",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "service"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "healthy"
+          },
+          "service": {
+            "type": "string",
+            "const": "training-api"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomerResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "email",
+          "active",
+          "createdOnUtc"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "email": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdOnUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "billingAddressId": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        }
+      },
+      "CustomerPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "pageIndex",
+          "pageSize",
+          "totalCount"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerResponse"
+            }
+          },
+          "pageIndex": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "totalCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "ProductResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "sku",
+          "price",
+          "published"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "published": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ProductPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "pageIndex",
+          "pageSize",
+          "totalCount"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          },
+          "pageIndex": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "totalCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "InventoryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "productId",
+          "manageInventoryMethod",
+          "stockQuantity"
+        ],
+        "properties": {
+          "productId": {
+            "type": "integer"
+          },
+          "manageInventoryMethod": {
+            "type": "string"
+          },
+          "stockQuantity": {
+            "type": "integer"
+          }
+        }
+      },
+      "CreateOrderRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "customerId",
+          "productId",
+          "quantity"
+        ],
+        "properties": {
+          "customerId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "productId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "orderGuid",
+          "customerId",
+          "orderStatus",
+          "paymentStatus",
+          "total",
+          "currencyCode",
+          "createdOnUtc"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "orderGuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "integer"
+          },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Processing",
+              "Complete",
+              "Cancelled"
+            ]
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Authorized",
+              "Paid",
+              "PartiallyRefunded",
+              "Refunded",
+              "Voided"
+            ]
+          },
+          "total": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "createdOnUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordPaymentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "orderId"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "FaultProfileResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile"
+        ],
+        "properties": {
+          "profile": {
+            "type": "string",
+            "enum": [
+              "none",
+              "database-transient",
+              "http-timeout",
+              "connection-reset"
+            ]
+          }
+        }
+      },
+      "OutboxMessageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "messageType",
+          "payload",
+          "state",
+          "attemptCount",
+          "createdUtc"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "messageType": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "attemptCount": {
+            "type": "integer"
+          },
+          "createdUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedUtc": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

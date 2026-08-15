@@ -34,10 +34,12 @@ Import-TrainingEnvironment
 Ensure-RuntimeAppSettings
 
 & (Join-Path $PSScriptRoot 'start.ps1')
+& (Join-Path $PSScriptRoot 'install-training-api.ps1')
 & (Join-Path $PSScriptRoot 'health.ps1')
 & (Join-Path $PSScriptRoot 'verify-platform.ps1')
+& (Join-Path $PSScriptRoot 'verify-contract.ps1')
+& (Join-Path $PSScriptRoot 'verify-api.ps1')
 
 $httpPort = [Environment]::GetEnvironmentVariable('TRAINING_HTTP_PORT')
 Write-Host "Commerce Engineering Lab is ready: http://localhost:$httpPort"
-Write-Host 'Training API documentation will be added in Phase 2.'
-
+Write-Host "Training API OpenAPI: http://localhost:$httpPort/api/openapi.yaml"
