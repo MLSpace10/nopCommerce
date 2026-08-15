@@ -1,0 +1,9 @@
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+BEGIN TRANSACTION;
+DELETE FROM dbo.TrainingIntegrationMessage;
+DELETE FROM dbo.TrainingAuditEvent;
+DELETE FROM dbo.TrainingScenarioState;
+COMMIT TRANSACTION;
+

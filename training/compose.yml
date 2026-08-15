@@ -1,0 +1,111 @@
+name: commerce-engineering-lab
+
+services:
+  database:
+    profiles: [core]
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in training/.env}
+    ports:
+      - "127.0.0.1:${TRAINING_SQL_PORT:-14339}:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -b -o /dev/null
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    profiles: [core]
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${TRAINING_REDIS_PORT:-16379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    profiles: [core]
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "127.0.0.1:${TRAINING_HTTP_PORT:-8080}:80"
+    volumes:
+      - ./runtime/App_Data/appsettings.json:/app/App_Data/appsettings.json
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, "wget --spider -q http://localhost/favicon.ico || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+    restart: unless-stopped
+
+  initializer:
+    profiles: [core]
+    image: mcr.microsoft.com/powershell:lts-alpine-3.20
+    entrypoint: [pwsh]
+    command:
+      - -NoLogo
+      - -NoProfile
+      - -File
+      - /training/scripts/initialize.ps1
+      - -BaseUrl
+      - http://app
+    environment:
+      TRAINING_DATABASE: ${TRAINING_DATABASE:-CommerceEngineeringLab}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in training/.env}
+      TRAINING_ADMIN_EMAIL: ${TRAINING_ADMIN_EMAIL:-admin@commerce-lab.invalid}
+      TRAINING_ADMIN_PASSWORD: ${TRAINING_ADMIN_PASSWORD:?Set TRAINING_ADMIN_PASSWORD in training/.env}
+    volumes:
+      - ./scripts:/training/scripts:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: "no"
+
+  seed:
+    profiles: [core]
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - >-
+        /opt/mssql-tools18/bin/sqlcmd -C -S database -U sa -P "$${MSSQL_SA_PASSWORD}"
+        -d "$${TRAINING_DATABASE}" -i /training/db/base-seed/apply.sql -b
+    environment:
+      TRAINING_DATABASE: ${TRAINING_DATABASE:-CommerceEngineeringLab}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in training/.env}
+    volumes:
+      - ./db:/training/db:ro
+    depends_on:
+      initializer:
+        condition: service_completed_successfully
+    restart: "no"
+
+volumes:
+  sql-data:
+    labels:
+      commerce-engineering-lab.scope: training-only
+  redis-data:
+    labels:
+      commerce-engineering-lab.scope: training-only
