@@ -38,6 +38,7 @@ Ensure-RuntimeAppSettings
 & (Join-Path $PSScriptRoot 'health.ps1')
 & (Join-Path $PSScriptRoot 'verify-platform.ps1')
 & (Join-Path $PSScriptRoot 'verify-contract.ps1')
+& (Join-Path $PSScriptRoot 'verify-task-framework.ps1')
 & (Join-Path $PSScriptRoot 'verify-api.ps1')
 
 $httpPort = [Environment]::GetEnvironmentVariable('TRAINING_HTTP_PORT')

@@ -1,0 +1,51 @@
+name: Commerce Engineering Lab
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/training.yml'
+      - 'Dockerfile'
+      - 'src/**'
+      - 'training/**'
+  workflow_dispatch:
+
+jobs:
+  framework-and-platform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Create local-only training configuration
+        shell: pwsh
+        run: Copy-Item training/.env.example training/.env
+      - name: Restore
+        run: dotnet restore src/NopCommerce.sln
+      - name: Build
+        run: dotnet build src/NopCommerce.sln --configuration Release --no-restore
+      - name: Framework and API infrastructure tests
+        run: >-
+          dotnet test src/Tests/Nop.Tests/Nop.Tests.csproj
+          --configuration Release --no-build
+          --filter "FullyQualifiedName~TaskManifestValidatorTests|FullyQualifiedName~TrainingApiInfrastructureTests"
+      - name: Validate task framework and repository separation
+        shell: pwsh
+        run: ./training/scripts/verify-task-framework.ps1
+      - name: Bootstrap and verify Docker, HTTP, SQL, Redis, API, and OpenAPI
+        shell: pwsh
+        run: ./training/scripts/bootstrap.ps1
+      - name: Verify clean reset from an empty training database
+        shell: pwsh
+        run: |
+          ./training/scripts/reset.ps1
+          ./training/scripts/install-training-api.ps1
+          ./training/scripts/verify-contract.ps1
+          ./training/scripts/verify-api.ps1
+      - name: Stop training containers
+        if: always()
+        shell: pwsh
+        run: ./training/scripts/stop.ps1

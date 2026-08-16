@@ -11,6 +11,10 @@ if ([string]::IsNullOrWhiteSpace($apiKey)) {
 }
 
 $baseUrl = "http://localhost:$httpPort"
+$curlCommand = Get-Command curl.exe -ErrorAction SilentlyContinue
+if ($null -eq $curlCommand) {
+    $curlCommand = Get-Command curl -ErrorAction Stop
+}
 $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) ("commerce-lab-api-" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
 
@@ -34,7 +38,7 @@ function Invoke-CurlRequest {
     }
     $arguments += "$baseUrl$Path"
 
-    $status = (& curl.exe @arguments | Out-String).Trim()
+    $status = (& $curlCommand.Source @arguments | Out-String).Trim()
     if ($LASTEXITCODE -ne 0) {
         throw "curl failed for $Method $Path with exit code $LASTEXITCODE."
     }

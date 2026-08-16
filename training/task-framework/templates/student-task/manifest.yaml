@@ -1,0 +1,22 @@
+schemaVersion: 1
+id: TRN-000
+title: Replace with a student-facing title
+type: bug
+difficulty: intermediate
+estimatedMinutes: 90
+prerequisites:
+  - phase-2
+baselineBranch: task/TRN-000-baseline
+scenarioSeed: TRN-000
+affectedApi:
+  - GET /api/replace-me
+requiredServices:
+  - core
+reproduceCommand: pwsh ./training/tasks/TRN-000/reproduce.ps1
+visibleVerificationCommand: pwsh ./training/tasks/TRN-000/visible-tests/verify.ps1
+hiddenVerificationCommand: mentor-verify TRN-000
+resetCommand: pwsh ./training/scripts/scenario.ps1 reset TRN-000
+compatibilityConstraints:
+  - Preserve existing public contracts unless the ticket explicitly changes one.
+learningObjectives:
+  - Trace the affected request through the existing application flow.

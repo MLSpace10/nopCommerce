@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Presentation\Nop.Web\Nop.Web.csproj" />
     <ProjectReference Include="..\..\Plugins\Nop.Plugin.Training.Api\Nop.Plugin.Training.Api.csproj" />
+    <ProjectReference Include="..\..\Tools\Nop.Training.TaskTool\Nop.Training.TaskTool.csproj" />
   </ItemGroup>
 
   <ItemGroup>

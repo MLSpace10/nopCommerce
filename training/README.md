@@ -15,6 +15,8 @@ This directory contains a local, synthetic, production-like backend lab based on
 ./training/scripts/verify-platform.ps1
 ./training/scripts/verify-contract.ps1
 ./training/scripts/verify-api.ps1
+./training/scripts/verify-task-framework.ps1
+./training/scripts/task.ps1 list
 ./training/scripts/stop.ps1
 ```
 
@@ -31,4 +33,5 @@ Local configuration is copied from `.env.example` to ignored `.env`. All example
 - Phase 0: audit and ADRs are recorded under `training/docs`.
 - Phase 1: implemented by `training/compose.yml` and `training/scripts`.
 - Phase 2: implemented by `Nop.Plugin.Training.Api`, `training/spec`, and the Phase 2 verification scripts.
-- Phases 3–4: not started; no pilot-task baseline or later-phase material is included.
+- Phase 3: implemented by the manifest schema, task tool, guarded scenario runner, student/mentor separation checks, templates, scoring rubric, and workflow documentation.
+- Phase 4: not started; no pilot-task baseline, defect seed, hidden test, or mentor solution is included.
