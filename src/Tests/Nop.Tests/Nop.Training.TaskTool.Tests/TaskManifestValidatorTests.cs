@@ -110,7 +110,7 @@ public class TaskManifestValidatorTests
     [Test]
     public void NullAndDuplicateCollectionsReturnValidationIssues()
     {
-        var manifest = ValidManifest()
+        var manifest = ValidManifest().ReplaceLineEndings("\n")
             .Replace("requiredServices:\n  - core", "requiredServices:")
             .Replace("  - GET /api/products", "  - GET /api/products\n  - GET /api/products");
         File.WriteAllText(_manifestPath, manifest);
