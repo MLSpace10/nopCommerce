@@ -75,6 +75,8 @@ public class TrainingApiInfrastructureTests
 
     [TestCase("none")]
     [TestCase("database-transient")]
+    [TestCase("database-permanent")]
+    [TestCase("order-response-timeout")]
     [TestCase("http-timeout")]
     [TestCase("connection-reset")]
     public void FaultStateAcceptsKnownProfiles(string profile)
@@ -92,5 +94,46 @@ public class TrainingApiInfrastructureTests
 
         state.TrySet("production-outage").Should().BeFalse();
         state.Profile.Should().Be("none");
+    }
+
+    [Test]
+    public void TransientDatabaseFaultFailsTwiceThenAllowsRead()
+    {
+        var state = new TrainingFaultState();
+        state.TrySet("database-transient").Should().BeTrue();
+
+        state.Invoking(value => value.BeforeProductRead()).Should().Throw<TrainingTransientDatabaseException>();
+        state.Invoking(value => value.BeforeProductRead()).Should().Throw<TrainingTransientDatabaseException>();
+        state.Invoking(value => value.BeforeProductRead()).Should().NotThrow();
+        state.Attempts.Should().Be(3);
+    }
+
+    [Test]
+    public void PermanentDatabaseFaultFailsEveryAttempt()
+    {
+        var state = new TrainingFaultState();
+        state.TrySet("database-permanent").Should().BeTrue();
+
+        state.Invoking(value => value.BeforeProductRead()).Should().Throw<TrainingPermanentDatabaseException>();
+        state.Invoking(value => value.BeforeProductRead()).Should().Throw<TrainingPermanentDatabaseException>();
+        state.Attempts.Should().Be(2);
+    }
+
+    [Test]
+    public void ChangingProfileResetsAttemptCount()
+    {
+        var state = new TrainingFaultState();
+        state.TrySet("database-transient");
+        try
+        {
+            state.BeforeProductRead();
+        }
+        catch (TrainingTransientDatabaseException)
+        {
+        }
+
+        state.TrySet("none");
+
+        state.Attempts.Should().Be(0);
     }
 }

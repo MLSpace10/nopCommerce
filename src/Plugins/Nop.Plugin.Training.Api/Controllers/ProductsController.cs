@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Nop.Plugin.Training.Api.Infrastructure;
 using Nop.Plugin.Training.Api.Models;
 using Nop.Services.Catalog;
 
@@ -8,10 +9,12 @@ namespace Nop.Plugin.Training.Api.Controllers;
 public sealed class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
+    private readonly TrainingFaultState _faultState;
 
-    public ProductsController(IProductService productService)
+    public ProductsController(IProductService productService, TrainingFaultState faultState)
     {
         _productService = productService;
+        _faultState = faultState;
     }
 
     [HttpGet("/api/products")]
@@ -38,9 +41,17 @@ public sealed class ProductsController : ControllerBase
     [HttpGet("/api/products/{productId:int}")]
     public async Task<ActionResult<ProductResponse>> GetById(int productId, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var product = await _productService.GetProductByIdAsync(productId);
-        return product is null ? NotFound() : Ok(Map(product));
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _faultState.BeforeProductRead();
+            var product = await _productService.GetProductByIdAsync(productId);
+            return product is null ? NotFound() : Ok(Map(product));
+        }
+        finally
+        {
+            Response.Headers["X-Training-Fault-Attempts"] = _faultState.Attempts.ToString();
+        }
     }
 
     private static ProductResponse Map(Nop.Core.Domain.Catalog.Product product)

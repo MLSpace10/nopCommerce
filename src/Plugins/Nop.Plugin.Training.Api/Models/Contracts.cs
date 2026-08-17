@@ -22,7 +22,7 @@ public sealed record RecordPaymentRequest(int OrderId);
 
 public sealed record FaultProfileRequest(string Profile);
 
-public sealed record FaultProfileResponse(string Profile);
+public sealed record FaultProfileResponse(string Profile, int Attempts);
 
 public sealed class OutboxMessageResponse
 {

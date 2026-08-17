@@ -1,0 +1,4 @@
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+DELETE FROM dbo.TrainingScenarioState WHERE ScenarioId = N'TRN-001';

@@ -38,6 +38,9 @@ jobs:
       - name: Bootstrap and verify Docker, HTTP, SQL, Redis, API, and OpenAPI
         shell: pwsh
         run: ./training/scripts/bootstrap.ps1
+      - name: Verify Phase 4 pilot baselines
+        shell: pwsh
+        run: ./training/scripts/verify-pilot-baselines.ps1
       - name: Verify clean reset from an empty training database
         shell: pwsh
         run: |

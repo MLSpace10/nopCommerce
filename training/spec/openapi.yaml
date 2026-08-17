@@ -156,6 +156,15 @@ paths:
       operationId: createOrder
       tags: [Orders]
       summary: Create a minimal synthetic order using nopCommerce services
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: Client-generated key used to make order creation idempotent.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
       requestBody:
         required: true
         content:
@@ -178,6 +187,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /api/orders/{orderId}:
@@ -270,7 +281,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [none, database-transient, http-timeout, connection-reset]
+            enum: [none, database-transient, database-permanent, order-response-timeout, http-timeout, connection-reset]
       responses:
         '200':
           description: Fault profile selected
@@ -499,11 +510,14 @@ components:
     FaultProfileResponse:
       type: object
       additionalProperties: false
-      required: [profile]
+      required: [profile, attempts]
       properties:
         profile:
           type: string
-          enum: [none, database-transient, http-timeout, connection-reset]
+          enum: [none, database-transient, database-permanent, order-response-timeout, http-timeout, connection-reset]
+        attempts:
+          type: integer
+          minimum: 0
     OutboxMessageResponse:
       type: object
       additionalProperties: false

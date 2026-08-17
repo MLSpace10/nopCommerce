@@ -16,6 +16,7 @@ This directory contains a local, synthetic, production-like backend lab based on
 ./training/scripts/verify-contract.ps1
 ./training/scripts/verify-api.ps1
 ./training/scripts/verify-task-framework.ps1
+./training/scripts/verify-pilot-baselines.ps1
 ./training/scripts/task.ps1 list
 ./training/scripts/stop.ps1
 ```
@@ -34,4 +35,5 @@ Local configuration is copied from `.env.example` to ignored `.env`. All example
 - Phase 1: implemented by `training/compose.yml` and `training/scripts`.
 - Phase 2: implemented by `Nop.Plugin.Training.Api`, `training/spec`, and the Phase 2 verification scripts.
 - Phase 3: implemented by the manifest schema, task tool, guarded scenario runner, student/mentor separation checks, templates, scoring rubric, and workflow documentation.
-- Phase 4: not started; no pilot-task baseline, defect seed, hidden test, or mentor solution is included.
+- Phase 4: the student repository contains the TRN-001, TRN-003, and TRN-012 baselines, deterministic scenarios, tickets, reproduction scripts, and visible tests. Hidden tests, hints, review notes, and reference solutions remain in the separate mentor repository.
+- Phase 5: not started.

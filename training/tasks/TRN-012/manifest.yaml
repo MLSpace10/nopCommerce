@@ -1,0 +1,26 @@
+schemaVersion: 1
+id: TRN-012
+title: Make order creation idempotent
+type: bug
+difficulty: advanced
+estimatedMinutes: 300
+prerequisites:
+  - phase-3
+  - sql-transactions
+baselineBranch: task/TRN-012-baseline
+scenarioSeed: TRN-012
+affectedApi:
+  - POST /api/orders
+  - GET /api/orders/{orderId}
+requiredServices:
+  - core
+reproduceCommand: pwsh ./training/tasks/TRN-012/reproduce.ps1
+visibleVerificationCommand: pwsh ./training/tasks/TRN-012/visible-tests/verify.ps1
+hiddenVerificationCommand: mentor-verify TRN-012
+resetCommand: pwsh ./training/scripts/scenario.ps1 reset TRN-012
+compatibilityConstraints:
+  - Preserve order creation for clients that omit Idempotency-Key.
+  - Do not hold a transaction across simulated response delay.
+learningObjectives:
+  - Enforce persisted idempotency under retries and concurrency.
+  - Define payload conflict and response replay semantics.

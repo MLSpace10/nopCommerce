@@ -1,0 +1,26 @@
+schemaVersion: 1
+id: TRN-001
+title: Retry a transient database failure on a safe product read
+type: bug
+difficulty: advanced
+estimatedMinutes: 180
+prerequisites:
+  - phase-3
+  - training-api
+baselineBranch: task/TRN-001-baseline
+scenarioSeed: TRN-001
+affectedApi:
+  - GET /api/products/{productId}
+  - POST /api/internal/training/faults/{profile}
+requiredServices:
+  - core
+reproduceCommand: pwsh ./training/tasks/TRN-001/reproduce.ps1
+visibleVerificationCommand: pwsh ./training/tasks/TRN-001/visible-tests/verify.ps1
+hiddenVerificationCommand: mentor-verify TRN-001
+resetCommand: pwsh ./training/scripts/scenario.ps1 reset TRN-001
+compatibilityConstraints:
+  - Preserve successful and not-found product response contracts.
+  - Retry only the controlled safe read path and never order or payment writes.
+learningObjectives:
+  - Classify transient and permanent database failures.
+  - Bound exponential backoff with jitter and verify attempt counts.

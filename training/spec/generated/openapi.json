@@ -277,6 +277,19 @@
           "Orders"
         ],
         "summary": "Create a minimal synthetic order using nopCommerce services",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Client-generated key used to make order creation idempotent.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -311,6 +324,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -470,6 +486,8 @@
               "enum": [
                 "none",
                 "database-transient",
+                "database-permanent",
+                "order-response-timeout",
                 "http-timeout",
                 "connection-reset"
               ]
@@ -865,7 +883,8 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "profile"
+          "profile",
+          "attempts"
         ],
         "properties": {
           "profile": {
@@ -873,9 +892,15 @@
             "enum": [
               "none",
               "database-transient",
+              "database-permanent",
+              "order-response-timeout",
               "http-timeout",
               "connection-reset"
             ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       },

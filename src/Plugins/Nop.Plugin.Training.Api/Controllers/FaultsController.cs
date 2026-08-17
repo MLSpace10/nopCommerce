@@ -26,6 +26,6 @@ public sealed class FaultsController : ControllerBase
         if (!_faultState.TrySet(profile))
             return BadRequest(new { code = "unknown_fault_profile" });
 
-        return Ok(new FaultProfileResponse(_faultState.Profile));
+        return Ok(new FaultProfileResponse(_faultState.Profile, _faultState.Attempts));
     }
 }

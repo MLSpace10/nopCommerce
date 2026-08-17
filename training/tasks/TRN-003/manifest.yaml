@@ -1,0 +1,26 @@
+schemaVersion: 1
+id: TRN-003
+title: Add a contract-first product details endpoint
+type: feature
+difficulty: intermediate
+estimatedMinutes: 150
+prerequisites:
+  - phase-3
+  - openapi
+baselineBranch: task/TRN-003-baseline
+scenarioSeed: TRN-003
+affectedApi:
+  - GET /api/products/{productId}/details
+  - GET /api/products
+requiredServices:
+  - core
+reproduceCommand: pwsh ./training/tasks/TRN-003/reproduce.ps1
+visibleVerificationCommand: pwsh ./training/tasks/TRN-003/visible-tests/verify.ps1
+hiddenVerificationCommand: mentor-verify TRN-003
+resetCommand: pwsh ./training/scripts/scenario.ps1 reset TRN-003
+compatibilityConstraints:
+  - Add the source OpenAPI contract before runtime implementation.
+  - Preserve the existing product collection and product by-id contracts.
+learningObjectives:
+  - Implement a contract-first endpoint using existing application services.
+  - Map nullable and multi-source product data without contract drift.

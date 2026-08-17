@@ -58,7 +58,10 @@ try {
     $customers = Invoke-CurlRequest -Path '/api/customers?pageSize=100' -ExpectedStatus 200 -Authenticated | ConvertFrom-Json
     $customer = $customers.items | Where-Object { $null -ne $_.billingAddressId -and $_.active } | Select-Object -First 1
     if ($null -eq $customer) {
-        throw 'No active synthetic customer with a billing address was returned.'
+        $customer = Invoke-CurlRequest -Path '/api/customers/4' -ExpectedStatus 200 -Authenticated | ConvertFrom-Json
+    }
+    if ($null -eq $customer.billingAddressId -or -not $customer.active) {
+        throw 'The stable synthetic customer is not active or has no billing address.'
     }
     Invoke-CurlRequest -Path "/api/customers/$($customer.id)" -ExpectedStatus 200 -Authenticated | Out-Null
 

@@ -1,9 +1,11 @@
+using System.Security;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Payments;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Tax;
 using Nop.Plugin.Training.Api.Models;
+using Nop.Plugin.Training.Api.Infrastructure;
 using Nop.Services.Catalog;
 using Nop.Services.Customers;
 using Nop.Services.Orders;
@@ -18,19 +20,22 @@ public sealed class OrdersController : ControllerBase
     private readonly IOrderProcessingService _orderProcessingService;
     private readonly IOrderService _orderService;
     private readonly IProductService _productService;
+    private readonly TrainingFaultState _faultState;
 
     public OrdersController(
         ICustomNumberFormatter customNumberFormatter,
         ICustomerService customerService,
         IOrderProcessingService orderProcessingService,
         IOrderService orderService,
-        IProductService productService)
+        IProductService productService,
+        TrainingFaultState faultState)
     {
         _customNumberFormatter = customNumberFormatter;
         _customerService = customerService;
         _orderProcessingService = orderProcessingService;
         _orderService = orderService;
         _productService = productService;
+        _faultState = faultState;
     }
 
     [HttpPost("/api/orders")]
@@ -38,6 +43,10 @@ public sealed class OrdersController : ControllerBase
     {
         if (request.Quantity is < 1 or > 100)
             return BadRequest(new { code = "invalid_quantity" });
+
+        var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
+        if (idempotencyKey.Length > 128)
+            return BadRequest(new { code = "invalid_idempotency_key" });
 
         cancellationToken.ThrowIfCancellationRequested();
         var customer = await _customerService.GetCustomerByIdAsync(request.CustomerId);
@@ -82,7 +91,9 @@ public sealed class OrdersController : ControllerBase
             SubscriptionTransactionId = string.Empty,
             ShippingMethod = string.Empty,
             ShippingRateComputationMethodSystemName = string.Empty,
-            CustomValuesXml = string.Empty,
+            CustomValuesXml = string.IsNullOrWhiteSpace(idempotencyKey)
+                ? string.Empty
+                : $"<Training><IdempotencyKey>{SecurityElement.Escape(idempotencyKey)}</IdempotencyKey></Training>",
             CustomOrderNumber = string.Empty,
             CreatedOnUtc = DateTime.UtcNow
         };
@@ -109,6 +120,7 @@ public sealed class OrdersController : ControllerBase
 
         await _productService.AdjustInventoryAsync(product, -request.Quantity, message: $"Training API order {order.Id}");
         cancellationToken.ThrowIfCancellationRequested();
+        await _faultState.DelayOrderResponseAsync();
 
         return CreatedAtAction(nameof(GetById), new { orderId = order.Id }, Map(order));
     }
