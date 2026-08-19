@@ -31,7 +31,6 @@ if (-not (Test-Path -LiteralPath $environmentFile)) {
 }
 
 Import-TrainingEnvironment
-Ensure-RuntimeAppSettings
 
 & (Join-Path $PSScriptRoot 'start.ps1')
 & (Join-Path $PSScriptRoot 'install-training-api.ps1')

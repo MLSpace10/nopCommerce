@@ -13,9 +13,6 @@ if (-not (Select-String -LiteralPath $composeFile -Pattern '^name: commerce-engi
 
 Invoke-DockerCompose -Arguments @('--profile', 'core', 'down', '--volumes', '--remove-orphans')
 
-$appSettingsFile = Join-Path $trainingRoot 'runtime/App_Data/appsettings.json'
-[IO.File]::WriteAllText($appSettingsFile, '{}', [Text.UTF8Encoding]::new($false))
-
 & (Join-Path $PSScriptRoot 'start.ps1')
 & (Join-Path $PSScriptRoot 'health.ps1')
 & (Join-Path $PSScriptRoot 'verify-platform.ps1')

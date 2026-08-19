@@ -38,6 +38,9 @@ jobs:
       - name: Verify initializer installation result detection
         shell: pwsh
         run: ./training/scripts/verify-initializer-result.ps1
+      - name: Verify App_Data storage configuration
+        shell: pwsh
+        run: ./training/scripts/verify-app-data-storage.ps1
       - name: Bootstrap and verify Docker, HTTP, SQL, Redis, API, and OpenAPI
         shell: pwsh
         run: ./training/scripts/bootstrap.ps1

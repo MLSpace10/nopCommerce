@@ -27,6 +27,8 @@ The contract check uses the pinned `redocly/cli:2.32.2` image to lint and bundle
 
 `reset.ps1` is intentionally destructive only for the explicit Compose project `commerce-engineering-lab`; it removes that project's containers and named volumes and recreates the local synthetic environment.
 
+The Docker named volume `app-data` owns the complete `/app/App_Data` directory, including the generated `appsettings.json`. A normal start preserves that installed state; reset removes the volume so nopCommerce creates a clean configuration during installation on both Windows and Linux hosts.
+
 Local configuration is copied from `.env.example` to ignored `.env`. All example credentials are development-only placeholders. Replace them locally if the machine is shared.
 
 ## Current scope

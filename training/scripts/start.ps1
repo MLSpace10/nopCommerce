@@ -3,7 +3,6 @@ param()
 
 . (Join-Path $PSScriptRoot '_common.ps1')
 Import-TrainingEnvironment
-Ensure-RuntimeAppSettings
 
 $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) ("commerce-lab-start-" + [Guid]::NewGuid().ToString('N'))
 $pluginsFile = Join-Path $temporaryRoot 'plugins.json'

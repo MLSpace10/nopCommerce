@@ -56,16 +56,6 @@ function Invoke-DockerCompose {
     }
 }
 
-function Ensure-RuntimeAppSettings {
-    $trainingRoot = Get-TrainingRoot
-    $runtimeDirectory = Join-Path $trainingRoot 'runtime/App_Data'
-    $appSettingsFile = Join-Path $runtimeDirectory 'appsettings.json'
-    New-Item -ItemType Directory -Path $runtimeDirectory -Force | Out-Null
-    if (-not (Test-Path -LiteralPath $appSettingsFile)) {
-        [IO.File]::WriteAllText($appSettingsFile, '{}', [Text.UTF8Encoding]::new($false))
-    }
-}
-
 function Get-WebResponseUri {
     param([Parameter(Mandatory)]$Response)
 
