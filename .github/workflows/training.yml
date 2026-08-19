@@ -48,6 +48,45 @@ jobs:
           ./training/scripts/install-training-api.ps1
           ./training/scripts/verify-contract.ps1
           ./training/scripts/verify-api.ps1
+      - name: Diagnose training containers on failure
+        if: failure()
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $compose = @(
+            'compose',
+            '--project-name', 'commerce-engineering-lab',
+            '--env-file', 'training/.env',
+            '--file', 'training/compose.yml'
+          )
+
+          foreach ($line in Get-Content -LiteralPath training/.env) {
+            if ($line -match '^(MSSQL_SA_PASSWORD|TRAINING_ADMIN_PASSWORD|TRAINING_API_KEY)=(.+)$') {
+              Write-Output "::add-mask::$($Matches[2])"
+            }
+          }
+
+          & docker @compose ps --all
+          & docker @compose logs --no-color --tail 300 app initializer seed
+
+          $inspectCommand = @'
+          echo "=== /app/App_Data files ==="
+          find /app/App_Data -maxdepth 3 -type f -print | sort
+
+          echo "=== Training.Api image artifacts ==="
+          for path in \
+            /app/Plugins/Training.Api/plugin.json \
+            /app/Plugins/Training.Api/Nop.Plugin.Training.Api.dll
+          do
+            if [ -f "$path" ]; then
+              ls -l "$path"
+            else
+              echo "MISSING: $path"
+            fi
+          done
+          '@
+
+          & docker @compose exec --no-TTY app sh -c $inspectCommand
       - name: Stop training containers
         if: always()
         shell: pwsh
