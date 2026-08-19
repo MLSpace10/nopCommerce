@@ -6,6 +6,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+. (Join-Path $PSScriptRoot '_initialize-result.ps1')
+
 $database = [Environment]::GetEnvironmentVariable('TRAINING_DATABASE')
 $saPassword = [Environment]::GetEnvironmentVariable('MSSQL_SA_PASSWORD')
 $adminEmail = [Environment]::GetEnvironmentVariable('TRAINING_ADMIN_EMAIL')
@@ -40,9 +42,14 @@ $form = @{
 }
 
 $result = Invoke-WebRequest -Uri "$BaseUrl/install" -Method Post -Body $form -WebSession $session -TimeoutSec 240
-if ($result.Content -notmatch 'restart-form') {
-    $plain = ($result.Content -replace '<[^>]+>', ' ' -replace '\s+', ' ').Trim()
-    throw "nopCommerce installation did not reach the restart step: $($plain.Substring(0, [Math]::Min(500, $plain.Length)))"
+if (-not (Test-NopInstallationResponseSuccessful -Html $result.Content)) {
+    $errorText = Get-NopInstallationErrorText -Html $result.Content -SensitiveValues @(
+        $connectionString,
+        $saPassword,
+        $adminPassword,
+        [Environment]::GetEnvironmentVariable('TRAINING_API_KEY')
+    )
+    throw "nopCommerce installation failed: $errorText"
 }
 
 Invoke-WebRequest -Uri "$BaseUrl/install/restartapplication" -WebSession $session -TimeoutSec 30 | Out-Null
