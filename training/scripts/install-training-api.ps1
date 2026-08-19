@@ -28,8 +28,42 @@ New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
 $pluginsFile = Join-Path $temporaryRoot 'plugins.json'
 
 try {
-    Invoke-DockerCompose -Arguments @('cp', 'app:/app/App_Data/plugins.json', $pluginsFile)
-    $plugins = Get-Content -LiteralPath $pluginsFile -Raw -Encoding UTF8 | ConvertFrom-Json
+    $copyArguments = @(Get-ComposeArguments) + @('cp', 'app:/app/App_Data/plugins.json', $pluginsFile)
+    $pluginsDeadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    $plugins = $null
+    $lastReadinessError = $null
+
+    do {
+        $copyOutput = & docker @copyArguments 2>&1
+        $copyExitCode = $LASTEXITCODE
+        if ($copyExitCode -eq 0) {
+            try {
+                $plugins = Get-Content -LiteralPath $pluginsFile -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
+                if ($null -eq $plugins) {
+                    throw 'The copied file does not contain a JSON value.'
+                }
+                break
+            }
+            catch {
+                $lastReadinessError = "The copied file is not ready JSON: $($_.Exception.Message)"
+            }
+        }
+        else {
+            $copyError = ($copyOutput | Out-String).Trim()
+            if ($copyError -notmatch '(?i)Could not find the file /app/App_Data/plugins\.json') {
+                throw "docker compose cp failed with exit code $copyExitCode while reading plugins.json: $copyError"
+            }
+            $lastReadinessError = $copyError
+        }
+
+        if ([DateTime]::UtcNow -lt $pluginsDeadline) {
+            Start-Sleep -Seconds 3
+        }
+    } while ([DateTime]::UtcNow -lt $pluginsDeadline)
+
+    if ($null -eq $plugins) {
+        throw "/app/App_Data/plugins.json did not become available as valid JSON within $TimeoutSeconds seconds. Last readiness error: $lastReadinessError"
+    }
 
     $installed = @($plugins.InstalledPlugins | Where-Object { $_.SystemName -eq 'Training.Api' })
     $pending = @($plugins.PluginNamesToInstall | Where-Object { $_.Item1 -eq 'Training.Api' })
